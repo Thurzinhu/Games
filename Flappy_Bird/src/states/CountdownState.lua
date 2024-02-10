@@ -23,7 +23,7 @@ function CountdownState:update(dt)
     self.timer = self.timer + dt
 
     if self.timer >= COUNTDOWN_TIME then
-        self.timer = 0
+        self.timer = self.timer - COUNTDOWN_TIME
         self.count = self.count - 1
 
         if self.count == 0 then
