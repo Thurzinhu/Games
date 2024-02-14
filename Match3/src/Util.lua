@@ -12,3 +12,28 @@ function generateQuads(tileSheet, tile_width, tile_height)
 
     return quads
 end
+
+function generateTiles(quads)
+    local rows, columns = 8, 8
+    local total_tiles = 108
+
+    -- for each tile color we have six different styles
+    local styles = 6
+
+    local tiles = {}
+
+    for i = 1, total_tiles, styles do
+        table.insert(tiles, table.slice(quads, i, i + 5))
+    end
+
+    return tiles
+end
+
+function table.slice(tbl, from, to, step)
+    local slice = {}
+    for i = from or 1, to or #tbl, step or 1 do
+        table.insert(slice, tbl[i])
+    end
+
+    return slice
+end

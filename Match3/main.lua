@@ -11,15 +11,25 @@ function love.load()
         fullscreen = false
     })
 
+    gFonts = {
+        ['small'] = love.graphics.newFont('fonts/font.ttf', 16),
+        ['medium'] = love.graphics.newFont('fonts/font.ttf', 32),
+        ['large'] = love.graphics.newFont('fonts/font.ttf', 64)
+    }
+
     gTextures = {
         ['main'] = love.graphics.newImage('graphics/match3.png')
     }
 
     gFrames = {
-        ['tiles'] = generateQuads(gTextures.main, 32, 32)
+        ['tiles'] = generateTiles(generateQuads(gTextures.main, 32, 32))
     }
 
-    Board = Board(240, 16)
+    gStateMachine = StateMachine {
+        ['title'] = function() return TitleScreenState() end,
+        ['play'] = function() return PlayState() end
+    }
+    gStateMachine:change('title')
 
     love.keyboard.keysPressed = {}
 end
@@ -37,12 +47,20 @@ function love.resize(w, h)
 end
 
 function love.update(dt)
+    gStateMachine:update()
+
+    -- reseting keysPressed table each frame
+    love.keyboard.keysPressed = {}
+
+    Timer.update(dt)
 end
 
 function love.draw()
     push:start()
 
-    Board:render()
+    love.graphics.clear(40/255, 45/255, 52/255, 255/255)
+
+    gStateMachine:render()
 
     push:finish()
 end
