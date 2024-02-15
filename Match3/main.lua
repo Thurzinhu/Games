@@ -47,12 +47,10 @@ function love.resize(w, h)
 end
 
 function love.update(dt)
-    gStateMachine:update()
+    gStateMachine:update(dt)
 
     -- reseting keysPressed table each frame
     love.keyboard.keysPressed = {}
-
-    Timer.update(dt)
 end
 
 function love.draw()

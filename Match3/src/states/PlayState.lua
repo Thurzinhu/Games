@@ -2,6 +2,7 @@ PlayState = Class{__includes = BaseState}
 
 function PlayState:enter(params)
     self.board = params.board
+    self.score = params.score or 0
 
     -- upper left tile selected
     self.currentTile = {
@@ -9,7 +10,7 @@ function PlayState:enter(params)
         column = 1,
     }
 
-    self.tiles_selected = {}
+    self.selectedTiles = {}
 end
 
 function PlayState:update(dt)
@@ -22,19 +23,21 @@ function PlayState:update(dt)
 
         tile_selected.isSelected = true
 
-        table.insert(self.tiles_selected, tile_selected)
+        table.insert(self.selectedTiles, tile_selected)
 
-        if #self.tiles_selected == 2 then
-            
-            self.board:checkValidSwap(self.tiles_selected)
+        if #self.selectedTiles == 2 then
+
+            self.board:checkValidSwap(self.selectedTiles)
+            if self.board:checkMatch() then
+                self.board:resolveMatches()
+            end
 
             -- reseting tiles selected
-            for _, tile in pairs(self.tiles_selected) do
+            for _, tile in pairs(self.selectedTiles) do
                 tile.isSelected = false
             end
             
-            self.currentTile.row, self.currentTile.column = self.tiles_selected[1].row, self.tiles_selected[1].column
-            self.tiles_selected = {}
+            self.selectedTiles = {}
         end
     end
     
@@ -47,6 +50,8 @@ function PlayState:update(dt)
     elseif love.keyboard.wasPressed('down') then
         self.currentTile.row = math.min(8, self.currentTile.row + 1)
     end
+
+    Timer.update(dt)
 end
 
 function PlayState:render()
