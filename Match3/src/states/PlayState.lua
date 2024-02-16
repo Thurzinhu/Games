@@ -26,11 +26,7 @@ function PlayState:update(dt)
         table.insert(self.selectedTiles, tile_selected)
 
         if #self.selectedTiles == 2 then
-
             self.board:checkValidSwap(self.selectedTiles)
-            if self.board:checkMatch() then
-                self.board:resolveMatches()
-            end
 
             -- reseting tiles selected
             for _, tile in pairs(self.selectedTiles) do
@@ -59,8 +55,8 @@ function PlayState:render()
     local current_tile = self.board.tiles[self.currentTile.row][self.currentTile.column]
 
     self.board:render()
-    
+    love.graphics.setLineWidth(4)
     love.graphics.setColor(1, 0, 0, 1)
-    love.graphics.rectangle('line', current_tile.x + self.board.x, current_tile.y + self.board.y, TILE_WIDTH, TILE_HEIGHT, 8, 8)
+    love.graphics.rectangle('line', current_tile.x + self.board.x, current_tile.y + self.board.y, TILE_WIDTH, TILE_HEIGHT, 4)
     love.graphics.setColor(1, 1, 1, 1)
 end
