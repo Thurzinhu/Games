@@ -7,6 +7,7 @@ function Board:init(x, y, level)
     self.x = x
     self.y = y
     self.level = level
+    self.highlightTrasparency = 0.2
 
     self:getTiles()
 end
@@ -44,8 +45,32 @@ end
 function Board:render()
     for row = 1, ROWS do
         for column = 1, COLUMNS do
+            local currentTile = self.tiles[row][column]
+
             -- printing tiles with an offset so they fit in board boundaries
-            self.tiles[row][column]:render(self.x, self.y)
+            currentTile:render(self.x, self.y)
+
+            -- highlighting tile 
+            if currentTile.isHighlightedForHint then
+                Timer.tween(0.5, {
+                    [self] = {highlightTrasparency = 0.8}
+                    })
+                :finish(function () 
+                    Timer.tween(0.5, {
+                        [self] = {highlightTrasparency = 0}
+                    })
+                    :finish(function()
+                        currentTile.isHighlightedForHint = false
+                    end)
+                end)
+
+                love.graphics.setColor(1, 1, 1, self.highlightTrasparency)
+                love.graphics.rectangle('fill', currentTile.x + self.x, currentTile.y + self.y, TILE_WIDTH, TILE_HEIGHT, 4)
+                
+                -- reseting color and transparency
+                love.graphics.setColor(1, 1, 1, 1)
+            end
+
         end
     end
 end 
@@ -71,13 +96,17 @@ function Board:checkValidSwap(tiles)
     ]]
     local firstTile, secondTile = tiles[1], tiles[2]
     if math.abs(firstTile.row - secondTile.row) + math.abs(firstTile.column - secondTile.column) == 1 then
-            -- swaping tiles in board and tweening their y position
-            self:swapTiles({tiles = tiles, tween = true})
+        -- swaping tiles in board and tweening their y position
+        self:swapTiles(tiles)
+
+        return true
     end
+
+    return false
 end
 
-function Board:swapTiles(params)
-    local firstTile, secondTile = params.tiles[1], params.tiles[2]
+function Board:swapTiles(tiles)
+    local firstTile, secondTile = tiles[1], tiles[2]
 
     self.tiles[firstTile.row][firstTile.column] = secondTile
     self.tiles[secondTile.row][secondTile.column] = firstTile
@@ -92,22 +121,6 @@ function Board:swapTiles(params)
     
     -- Set the values of the second tile to the temporarily stored values
     secondTile.row, secondTile.column = temp.row, temp.column
-
-    if params.tween then
-        -- after swaping calling checkMatch
-        firstTile:swap(secondTile):finish(
-            function() 
-                if self:checkMatch() then
-                    self:resolveMatches()
-                else
-                    -- if no match after swaping blocks undo swap
-                    self:swapTiles({tiles = params.tiles})
-        
-                    firstTile:swap(secondTile)
-                end
-            end
-        )
-    end
 end
 
 function Board:checkMatch()
@@ -169,17 +182,16 @@ function Board:checkMatch()
 end
 
 -- adds new tiles to board and returns points earned
+-- as well as a time bonus for each match
 function Board:resolveMatches()
-    local score = 0
-
     self:removeMatches()
     self:shiftTilesDown()
     self:replaceTiles()
-
-    return score
 end
 
 function Board:removeMatches()
+    --timeBonus = timeBonus + #self.matches
+
     for _, match in pairs(self.matches) do
         for _, tile in pairs(match) do
             -- score = score + (tile.color * 10) + (tile.style * 25)
@@ -190,6 +202,7 @@ function Board:removeMatches()
     end
 
     self.matches = {}
+    -- return score, timeBonus
 end
 
 function Board:shiftTilesDown()
@@ -236,7 +249,7 @@ function Board:replaceTiles()
                 local newTile = Tile(
                 0, -- creating tile out of the screen
                 column,
-                math.random(collors), -- color
+                math.random(6), -- color
                 math.random(self.highestStyle) -- style
                 )
 
@@ -248,20 +261,17 @@ function Board:replaceTiles()
         end
     end
 
-    Timer.tween(0.25, self.tilesToFall):finish(
-        function()
-            -- if new matches are made as a result of the tiles that have fallen down resolveMatches again
-            if self:checkMatch() then
-                self:resolveMatches()
-            elseif not self:availableMatches() then
-                Timer.after(2,
-                function()
-                    self:reset()
-                end
-                )
-            end
+    Timer.tween(0.25, self.tilesToFall)
+    :finish(function()
+        -- if new matches are made as a result of the tiles that have fallen down resolveMatches again
+        if self:checkMatch() then
+            self:resolveMatches()
+        elseif not self:availableMatches() then
+            Timer.after(2, function()
+                self:reset()
+            end)
         end
-    )
+    end)
 
     -- reseting tiles to fall table after all tiles have fallen
     self.tilesToFall = {}
@@ -298,7 +308,8 @@ end
 
 function Board:checkSwap(tiles)
     -- swaping tiles in board without tweening them
-    self:swapTiles({tiles = tiles})
+    self:swapTiles(tiles)
+
     if self:checkMatch() then
         for _, match in pairs(self.matches) do
             table.insert(self.possibleMatches, match)
@@ -308,7 +319,7 @@ function Board:checkSwap(tiles)
     end
 
     -- undoing swap in board
-    self:swapTiles({tiles = tiles})
+    self:swapTiles(tiles)
 end
 
 function Board:reset()
@@ -321,10 +332,19 @@ function Board:reset()
     self:replaceTiles()
 end
 
-function Board:giveHint()
+function Board:getHint()
     local randomMatch = math.random(#self.possibleMatches)
+    local currentMatch = 1
 
-    for _, tile in pairs(randomMatch) do
-        -- tile:shake()
+    for _, match in pairs(self.possibleMatches) do
+        if currentMatch == randomMatch then
+            for _, tile in pairs(match) do
+                tile.isHighlightedForHint = true
+            end
+
+            break
+        end
+
+        currentMatch = currentMatch + 1
     end
 end

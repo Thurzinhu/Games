@@ -1,5 +1,7 @@
 require 'src/Dependencies'
 
+local backgroundScroll = 0
+
 function love.load()
     love.graphics.setDefaultFilter('nearest', 'nearest')
     
@@ -18,7 +20,8 @@ function love.load()
     }
 
     gTextures = {
-        ['main'] = love.graphics.newImage('graphics/match3.png')
+        ['main'] = love.graphics.newImage('graphics/match3.png'),
+        ['background'] = love.graphics.newImage('graphics/background.jpg')
     }
 
     gFrames = {
@@ -27,11 +30,16 @@ function love.load()
 
     gStateMachine = StateMachine {
         ['title'] = function() return TitleScreenState() end,
-        ['play'] = function() return PlayState() end
+        ['begin-game'] = function() return BeginGameState() end,
+        ['play'] = function() return PlayState() end,
+        ['game-over'] = function() return GameOverState() end
     }
     gStateMachine:change('title')
 
+    math.randomseed(os.time())
+
     love.keyboard.keysPressed = {}
+    love.mouse.buttonsPressed = {}
 end
 
 function love.keypressed(key)
@@ -42,23 +50,54 @@ function love.keyboard.wasPressed(key)
     return love.keyboard.keysPressed[key]
 end
 
+function love.mousepressed(x, y, button)
+    love.mouse.buttonsPressed[button] = true
+end
+
+function love.mouse.wasPressed(button)
+    return love.mouse.buttonsPressed[button]
+end
+
 function love.resize(w, h)
     push:resize(w, h)
 end
 
 function love.update(dt)
+    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLLING_SPEED * dt) % BACKGROUND_LOOPING_POINT
+
     gStateMachine:update(dt)
 
-    -- reseting keysPressed table each frame
+    -- reseting keysPressed and buttonsPressed tables each frame
     love.keyboard.keysPressed = {}
+    love.mouse.buttonsPressed = {}
 end
 
 function love.draw()
     push:start()
 
-    love.graphics.clear(40/255, 45/255, 52/255, 255/255)
+    local backgroundHeight = gTextures['background']:getHeight()
+
+    love.graphics.draw(gTextures['background'], 
+        -backgroundScroll, 0, 
+        -- no rotation
+        0,
+        -- scaling Y axis so it fills the screen
+        1, VIRTUAL_HEIGHT / (backgroundHeight - 1)
+    )
 
     gStateMachine:render()
 
     push:finish()
+end
+
+function printWithShadow(text, x, y, limit, allign, highlightColor)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.printf(text, x, y + 2, limit, allign)
+    
+    if highlightColor then
+        love.graphics.setColor(highlightColor)
+    else
+        love.graphics.setColor(1, 1, 1, 1)
+    end
+    love.graphics.printf(text, x, y, limit, allign)
 end

@@ -12,6 +12,7 @@ function Tile:init(row, column, color, style)
     self.color = color
     self.style = style
 
+    self.isHighlightedForHint = false
     self.isSelected = false
 end
 
