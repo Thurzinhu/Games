@@ -16,7 +16,6 @@ function TitleScreenState:init()
     -- the screen
 
     self.board = Board((VIRTUAL_WIDTH - spaceForTiles) / 2, (VIRTUAL_HEIGHT - spaceForTiles) / 2, 10)
-    self.highlightedOption = 1
     self.titleLetters = getCharsPositions('Match 3', VIRTUAL_HEIGHT / 2 - 60, gFonts.medium)
     self.transitionAlpha = 0
 
@@ -31,6 +30,11 @@ function TitleScreenState:init()
             pallete[6] = firstColor
         end
     )
+
+    self.buttons = {
+        startButton = Button(VIRTUAL_WIDTH / 2 - 30, VIRTUAL_HEIGHT / 2 + 25, 60, 20, 'Start'),
+        quitButton = Button(VIRTUAL_WIDTH / 2 - 50, VIRTUAL_HEIGHT / 2 + 50, 100, 20, 'Quit Game')
+    }
 end
 
 function TitleScreenState:update(dt)
@@ -38,34 +42,24 @@ function TitleScreenState:update(dt)
         love.event.quit()
     end
 
-    if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') or love.mouse.wasPressed(1) then
-        if self.highlightedOption == 1 then
-            Timer.tween(1, {
-                [self] = {transitionAlpha = 1}
-            }):finish(
-                function()
-                    gStateMachine:change('begin-game', {
-                        level = 1
-                    })
+    if self.buttons.startButton:wasPressed() then
+        Timer.tween(1, {
+            [self] = {transitionAlpha = 1}
+        })
+        :finish(function()
+            gStateMachine:change('begin-game', {
+                level = 1
+            })
 
-                    self.colorTimer:remove()
-                end
-            )
-        else
-            love.event.quit()
-        end
-    elseif love.keyboard.wasPressed('down') or love.keyboard.wasPressed('up') then
-        self.highlightedOption = self.highlightedOption == 1 and 2 or 1
+            self.colorTimer:remove()
+        end)
+
+    elseif self.buttons.quitButton:wasPressed() then
+        love.event.quit()
     end
 
-    -- changing highlighted option based on mouse position
-    local mouseX, mouseY = push:toGame(love.mouse.getPosition())
-    if mouseX >= VIRTUAL_WIDTH / 2 - 20 and mouseX <= VIRTUAL_WIDTH / 2 + 20 and
-        mouseY >= VIRTUAL_HEIGHT / 2 + 20 and mouseY <= VIRTUAL_HEIGHT / 2 + 40 then
-            self.highlightedOption = 1
-    elseif mouseX >= VIRTUAL_WIDTH / 2 - 45 and mouseX <= VIRTUAL_WIDTH / 2 + 45 and
-        mouseY >= VIRTUAL_HEIGHT / 2 + 40 and mouseY <= VIRTUAL_HEIGHT / 2 + 60 then
-            self.highlightedOption = 2
+    for _, button in pairs(self.buttons) do
+        button:update(dt)
     end
 
     Timer.update(dt)
@@ -101,16 +95,14 @@ function TitleScreenState:printTitle()
 end
 
 function TitleScreenState:printOptions()
-    local highlightColor = {255/255, 255/255, 80/255, 1}
-    
     love.graphics.setColor(1, 1, 1, 128/255)
     love.graphics.rectangle('fill', VIRTUAL_WIDTH / 2 - 76, VIRTUAL_HEIGHT / 2 + 20, 150, 58, 6)
     
     love.graphics.setFont(gFonts.small)
     
-    printWithShadow('Start', 0, VIRTUAL_HEIGHT / 2 + 28, VIRTUAL_WIDTH, 'center', self.highlightedOption == 1 and highlightColor)
-    
-    printWithShadow('Quit Game', 0, VIRTUAL_HEIGHT / 2 + 50, VIRTUAL_WIDTH, 'center', self.highlightedOption == 2 and highlightColor)
+    for _, button in pairs(self.buttons) do
+        button:render()
+    end
 end
 
 function getCharsPositions(text, y, font)

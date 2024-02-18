@@ -26,6 +26,8 @@ function generateTiles(quads)
         table.insert(tiles, table.slice(quads, i, i + 5))
     end
 
+    table.remove(tiles, 2)
+
     return tiles
 end
 

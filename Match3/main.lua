@@ -19,6 +19,11 @@ function love.load()
         ['large'] = love.graphics.newFont('fonts/font.ttf', 64)
     }
 
+    gSounds = {
+        ['pop'] = love.audio.newSource('sounds/pop.ogg', 'static'),
+        ['win'] = love.audio.newSource('sounds/win.wav', 'static')
+    }
+
     gTextures = {
         ['main'] = love.graphics.newImage('graphics/match3.png'),
         ['background'] = love.graphics.newImage('graphics/background.jpg')

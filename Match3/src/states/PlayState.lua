@@ -1,15 +1,11 @@
 PlayState = Class{__includes = BaseState}
 
-function PlayState:init()
-    self.transitionAlpha = 0
-end
-
 function PlayState:enter(params)
     self.board = params.board
     self.score = params.score or 0
     self.level = params.level or 1
     self.timer = 60
-    self.goalScore = 1000 + self.level * 200
+    self.goalScore = 2000 * self.level
     self.timeSinceLastMatch = 0
     self.timeBonus = 0
 
@@ -36,31 +32,31 @@ function PlayState:enter(params)
 end
 
 function PlayState:update(dt)
-    if love.keyboard.wasPressed('escape') then
+    if love.keyboard.wasPressed('escape') then 
         gStateMachine:change('title')
     end
-
+    
     -- if player gets score needed go to next level
-    if self.score >= self.goalScore then
-        Timer.tween(1, {
-            [self] = {transitionAlpha = 1}
-        }):
-        finish(function()
-            gStateMachine:change('begin-game', {
+    if self.score >= self.goalScore then   
+        Timer.clear()
+
+        gSounds.win:play()
+        gStateMachine:change('begin-game', {
                 level = self.level + 1
-            })
-        end)
+        })
     elseif self.timer == 0 then
+        Timer.clear()
+
         gStateMachine:change('game-over')
     end
-
+    
     if love.keyboard.wasPressed('return') or love.keyboard.wasPressed('enter') or love.mouse.wasPressed(1) then
         local tileSelected = self.board.tiles[self.currentTile.row][self.currentTile.column]
-
+        
         tileSelected.isSelected = true
-
+        
         table.insert(self.selectedTiles, tileSelected)
-
+        
         
         if #self.selectedTiles == 2 then
             if self.board:checkValidSwap(self.selectedTiles) then
@@ -73,8 +69,14 @@ function PlayState:update(dt)
                         -- if player did a match restart timer
                         self.timeSinceLastMatch = 0
 
-                        self.board:resolveMatches()
-                        
+                        local newScore, newTimeBonus = self.board:resolveMatches({
+                            score = self.score,
+                            timeBonus = self.timeBonus
+                        })
+
+                        self.score = newScore
+                        self.timeBonus = newTimeBonus
+
                         self.timer = self.timer + self.timeBonus
 
                         self.timeBonus = 0
@@ -108,9 +110,9 @@ function PlayState:update(dt)
 
     local mouseX, mouseY = push:toGame(love.mouse.getPosition())
     
-    -- tranforming mouse current position in board row and column
-    if mouseX >= self.board.x and mouseX <= self.board.x + (TILE_WIDTH * 8) and
-        mouseY >= self.board.y and mouseY <= self.board.y + (TILE_HEIGHT * 8) then
+    -- translating mouse current position into its corresponding row and column in the board
+    if mouseX and mouseX >= self.board.x and mouseX < self.board.x + (TILE_WIDTH * 8) and
+        mouseY and mouseY >= self.board.y and mouseY < self.board.y + (TILE_HEIGHT * 8) then
             self.currentTile.column = math.floor((mouseX - self.board.x) / TILE_WIDTH) + 1
             self.currentTile.row = math.floor((mouseY - self.board.y) / TILE_HEIGHT) + 1
     end
@@ -136,8 +138,4 @@ function PlayState:render()
     love.graphics.setLineWidth(4)
     love.graphics.setColor(1, 0, 0, 1)
     love.graphics.rectangle('line', currentTile.x + self.board.x, currentTile.y + self.board.y, TILE_WIDTH, TILE_HEIGHT, 4)
-    
-    -- drawing rect for transition 
-    love.graphics.setColor(1, 1, 1, self.transitionAlpha)
-    love.graphics.rectangle('fill', 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
 end

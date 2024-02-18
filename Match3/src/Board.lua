@@ -15,7 +15,7 @@ end
 function Board:getTiles()
     self.tiles = {}
 
-    self.highestStyle = math.floor(self.level / 2 + 1)
+    self.highestStyle = math.min(math.floor(self.level / 2 + 1), 6)
 
     for y = 1, ROWS do
         -- appending new list to hold new row tiles
@@ -181,28 +181,33 @@ function Board:checkMatch()
     return #self.matches > 0
 end
 
--- adds new tiles to board and returns points earned
+-- adds new tiles to board and gets points earned
 -- as well as a time bonus for each match
-function Board:resolveMatches()
-    self:removeMatches()
+function Board:resolveMatches(params)
+    gSounds.pop:play()
+    
+    self:removeMatches(params)
     self:shiftTilesDown()
-    self:replaceTiles()
+    self:replaceTiles(params)
+
+    return params.score, params.timeBonus
 end
 
-function Board:removeMatches()
-    --timeBonus = timeBonus + #self.matches
-
+function Board:removeMatches(params)
     for _, match in pairs(self.matches) do
+        params.timeBonus = params.timeBonus + #match
+
         for _, tile in pairs(match) do
-            -- score = score + (tile.color * 10) + (tile.style * 25)
+            params.score = params.score + (tile.color * 10) + (tile.style * 25)
 
             -- creating space in board
             self.tiles[tile.row][tile.column] = nil
         end
     end
-
+    
     self.matches = {}
-    -- return score, timeBonus
+    
+    return score, timeBonus
 end
 
 function Board:shiftTilesDown()
@@ -242,7 +247,7 @@ function Board:shiftTilesDown()
     end
 end
 
-function Board:replaceTiles()
+function Board:replaceTiles(params)
     for column = 1, COLUMNS do
         for row = 1, ROWS do
             if self.tiles[row][column] == nil then
@@ -265,7 +270,7 @@ function Board:replaceTiles()
     :finish(function()
         -- if new matches are made as a result of the tiles that have fallen down resolveMatches again
         if self:checkMatch() then
-            self:resolveMatches()
+            self:resolveMatches(params)
         elseif not self:availableMatches() then
             Timer.after(2, function()
                 self:reset()
@@ -329,7 +334,7 @@ function Board:reset()
         end
     end
 
-    self:replaceTiles()
+    self:getTiles(self.level)
 end
 
 function Board:getHint()
