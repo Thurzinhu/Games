@@ -123,7 +123,7 @@ function Board:swapTiles(tiles)
     secondTile.row, secondTile.column = temp.row, temp.column
 end
 
-function Board:checkMatch()
+function Board:checkMatch(isCheckingPossibleMove)
     local matches = {}
 
     -- checking for matches in the rows
@@ -142,12 +142,19 @@ function Board:checkMatch()
                 Checking whether theres a sequence of three or more blocks in a row
                 if so add a match to matches
             ]]
-            if column - initialColumn >= 3 then
+            local tilesInMatch = column - initialColumn
+            if tilesInMatch >= 3 then
+
+                if tilesInMatch >= 4 and not isCheckingPossibleMove then
+                    self.tiles[row][initialColumn].hasSpecialEffect = true
+                    initialColumn = initialColumn + 1
+                end
+
                 local match = {}
                 for i = initialColumn, column - 1 do
                     table.insert(match, self.tiles[row][i])
                 end
-
+                
                 table.insert(matches, match)
             end
         end
@@ -164,7 +171,14 @@ function Board:checkMatch()
                 row = row + 1
             end
 
-            if row - initialRow >= 3 then
+            local tilesInMatch = row - initialRow
+            if tilesInMatch >= 3 then
+
+                if tilesInMatch >= 4 and not isCheckingPossibleMove then
+                    self.tiles[initialRow][column].hasSpecialEffect = true
+                    initialRow = initialRow + 1
+                end
+
                 local match = {}
                 for i = initialRow, row - 1 do
                     table.insert(match, self.tiles[i][column])
@@ -184,6 +198,7 @@ end
 -- adds new tiles to board and gets points earned
 -- as well as a time bonus for each match
 function Board:resolveMatches(params)
+    gSounds.pop:stop()
     gSounds.pop:play()
     
     self:removeMatches(params)
@@ -199,6 +214,14 @@ function Board:removeMatches(params)
 
         for _, tile in pairs(match) do
             params.score = params.score + (tile.color * 10) + (tile.style * 25)
+
+            -- if tile is a special tile execute his special effect
+            if tile.hasSpecialEffect then
+                tile:performAction({
+                    score = params.score,
+                    board = self
+                })
+            end
 
             -- creating space in board
             self.tiles[tile.row][tile.column] = nil
@@ -315,7 +338,7 @@ function Board:checkSwap(tiles)
     -- swaping tiles in board without tweening them
     self:swapTiles(tiles)
 
-    if self:checkMatch() then
+    if self:checkMatch(true) then
         for _, match in pairs(self.matches) do
             table.insert(self.possibleMatches, match)
         end

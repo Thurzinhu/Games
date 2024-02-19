@@ -4,9 +4,9 @@ function PlayState:enter(params)
     self.board = params.board
     self.score = params.score or 0
     self.level = params.level or 1
-    self.timer = 60
+    self.timer = params.timer or 5
     self.goalScore = 2000 * self.level
-    self.timeSinceLastMatch = 0
+    self.timeSinceLastMatch = params.timeSinceLastMatch or 0
     self.timeBonus = 0
 
     -- upper left tile selected
@@ -18,9 +18,13 @@ function PlayState:enter(params)
     Timer.every(1, 
         function()
             self.timer = self.timer - 1
-
+            
+            if self.timer <= 5 then
+                gSounds.clock:play()
+            end
+            
             self.timeSinceLastMatch = self.timeSinceLastMatch + 1
-
+            
             -- every three seconds without matches give player a hint
             if self.timeSinceLastMatch % 3 == 0 then
                 self.board:getHint()
@@ -33,7 +37,20 @@ end
 
 function PlayState:update(dt)
     if love.keyboard.wasPressed('escape') then 
+        Timer.clear()
+
         gStateMachine:change('title')
+    elseif love.keyboard.wasPressed('p') then
+        Timer.clear()
+
+        gStateMachine:change('pause', {
+            board = self.board,
+            score = self.score,
+            level = self.level,
+            timer = self.timer,
+            goalScore = self.goalScore,
+            timeSinceLastMatch = self.timeSinceLastMatch 
+        })
     end
     
     -- if player gets score needed go to next level
@@ -51,6 +68,8 @@ function PlayState:update(dt)
     end
     
     if love.keyboard.wasPressed('return') or love.keyboard.wasPressed('enter') or love.mouse.wasPressed(1) then
+        gSounds.select:play()
+
         local tileSelected = self.board.tiles[self.currentTile.row][self.currentTile.column]
         
         tileSelected.isSelected = true

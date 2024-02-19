@@ -1,17 +1,23 @@
 GameOverState = Class{__includes = BaseState}
 
 function GameOverState:enter()
-
+    Timer.after(0.5, function()
+        gSounds['game-over']:play()
+    end)
 end
 
-function GameOverState:update()
+function GameOverState:update(dt)
     if love.keyboard.wasPressed('escape') then
         love.event.quit()
     end
 
     if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
+        Timer.clear()
+
         gStateMachine:change('title')
     end
+
+    Timer.update(dt)
 end
 
 function GameOverState:render()

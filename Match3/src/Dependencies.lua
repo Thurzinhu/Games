@@ -9,6 +9,7 @@ require 'src/states/BaseState'
 require 'src/states/TitleScreenState'
 require 'src/states/BeginGameState'
 require 'src/states/PlayState'
+require 'src/states/PauseState'
 require 'src/states/GameOverState'
 
 require 'src/Util'

@@ -43,6 +43,8 @@ function TitleScreenState:update(dt)
     end
 
     if self.buttons.startButton:wasPressed() then
+        gSounds.select:play()
+
         Timer.tween(1, {
             [self] = {transitionAlpha = 1}
         })

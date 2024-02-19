@@ -20,9 +20,15 @@ function love.load()
     }
 
     gSounds = {
+        ['music'] = love.audio.newSource('sounds/music.mp3', 'static'),
         ['pop'] = love.audio.newSource('sounds/pop.ogg', 'static'),
-        ['win'] = love.audio.newSource('sounds/win.wav', 'static')
+        ['win'] = love.audio.newSource('sounds/win.wav', 'static'),
+        ['select'] = love.audio.newSource('sounds/select.wav', 'static'),
+        ['game-over'] = love.audio.newSource('sounds/game_over.wav', 'static'),
+        ['clock'] = love.audio.newSource('sounds/clock.wav', 'static')
     }
+    gSounds.music:setLooping(true)
+    gSounds.music:play()
 
     gTextures = {
         ['main'] = love.graphics.newImage('graphics/match3.png'),
@@ -37,6 +43,7 @@ function love.load()
         ['title'] = function() return TitleScreenState() end,
         ['begin-game'] = function() return BeginGameState() end,
         ['play'] = function() return PlayState() end,
+        ['pause'] = function() return PauseState() end,
         ['game-over'] = function() return GameOverState() end
     }
     gStateMachine:change('title')
