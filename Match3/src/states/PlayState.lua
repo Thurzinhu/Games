@@ -4,7 +4,7 @@ function PlayState:enter(params)
     self.board = params.board
     self.score = params.score or 0
     self.level = params.level or 1
-    self.timer = params.timer or 5
+    self.timer = params.timer or 60
     self.goalScore = 2000 * self.level
     self.timeSinceLastMatch = params.timeSinceLastMatch or 0
     self.timeBonus = 0
