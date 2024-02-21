@@ -12,9 +12,11 @@ function Tile:init(row, column, color, style)
     self.color = color
     self.style = style
 
-    self.isHighlightedForHint = false
     self.isSelected = false
-
+    
+    -- each tile has a hint rectangle in case they could make a match
+    self.hintRectangleTransparency = 0
+    
     -- tiles with special effects can perform different action on board
     self.hasSpecialEffect = false
 end
@@ -27,9 +29,7 @@ function Tile:render(x, y)
     love.graphics.draw(gTextures.main, gFrames['tiles'][self.color][self.style], self.x + x, self.y + y)
     
     if self.hasSpecialEffect then
-        love.graphics.setColor(1, 1, 1, 0.4)
-        love.graphics.rectangle('fill', self.x + x, self.y + y, TILE_WIDTH, TILE_HEIGHT, 4)
-        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(gTextures.star, self.x + x + 8, self.y + y + 8)
     end
 
     if self.isSelected then
@@ -37,6 +37,10 @@ function Tile:render(x, y)
         love.graphics.rectangle('fill', self.x + x, self.y + y, TILE_WIDTH, TILE_HEIGHT, 4)
         love.graphics.setColor(1, 1, 1, 1)
     end
+    
+    love.graphics.setColor(1, 1, 1, self.hintRectangleTransparency)
+    love.graphics.rectangle('fill', self.x + x, self.y + y, TILE_WIDTH, TILE_HEIGHT, 4)
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
 function Tile:swap(other)

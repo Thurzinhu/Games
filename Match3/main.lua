@@ -32,7 +32,8 @@ function love.load()
 
     gTextures = {
         ['main'] = love.graphics.newImage('graphics/match3.png'),
-        ['background'] = love.graphics.newImage('graphics/background.jpg')
+        ['background'] = love.graphics.newImage('graphics/background.jpg'),
+        ['star'] = love.graphics.newImage('graphics/star.png')
     }
 
     gFrames = {

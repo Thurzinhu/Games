@@ -49,28 +49,6 @@ function Board:render()
 
             -- printing tiles with an offset so they fit in board boundaries
             currentTile:render(self.x, self.y)
-
-            -- highlighting tile 
-            if currentTile.isHighlightedForHint then
-                Timer.tween(0.5, {
-                    [self] = {highlightTrasparency = 0.8}
-                    })
-                :finish(function () 
-                    Timer.tween(0.5, {
-                        [self] = {highlightTrasparency = 0}
-                    })
-                    :finish(function()
-                        currentTile.isHighlightedForHint = false
-                    end)
-                end)
-
-                love.graphics.setColor(1, 1, 1, self.highlightTrasparency)
-                love.graphics.rectangle('fill', currentTile.x + self.x, currentTile.y + self.y, TILE_WIDTH, TILE_HEIGHT, 4)
-                
-                -- reseting color and transparency
-                love.graphics.setColor(1, 1, 1, 1)
-            end
-
         end
     end
 end 
@@ -296,7 +274,7 @@ function Board:replaceTiles(params)
             self:resolveMatches(params)
         elseif not self:availableMatches() then
             Timer.after(2, function()
-                self:reset()
+                self:getTiles(self.level)
             end)
         end
     end)
@@ -350,29 +328,32 @@ function Board:checkSwap(tiles)
     self:swapTiles(tiles)
 end
 
-function Board:reset()
-    for row = 1, ROWS do
-        for column = 1, COLUMNS do
-            self.tiles[row][column] = nil
-        end
-    end
-
-    self:getTiles(self.level)
-end
-
 function Board:getHint()
     local randomMatch = math.random(#self.possibleMatches)
-    local currentMatch = 1
 
-    for _, match in pairs(self.possibleMatches) do
-        if currentMatch == randomMatch then
-            for _, tile in pairs(match) do
-                tile.isHighlightedForHint = true
-            end
+    -- gettin random match in possibleMatches table
+    self.tilesForHint = self.possibleMatches[randomMatch]
+    
+    -- creating new table to hold tiles tweening values
+    local tiles = {}
+    for _, tile in pairs(self.tilesForHint) do
+        tiles[tile] = {hintRectangleTransparency = 0.8}
+    end
 
-            break
+    -- creating timer to keep track of the tweening
+    self.hintTimer = Timer.tween(0.5, tiles)
+    :finish(function()
+
+        -- after tweening each tile hint transparency to a higher value
+        -- we reset them to their normal state
+        local tiles = {}
+        for _, tile in pairs(self.tilesForHint) do
+            tiles[tile] = {hintRectangleTransparency = 0}
         end
 
-        currentMatch = currentMatch + 1
-    end
+        Timer.tween(0.5, tiles)
+    end)
+    
+    -- returning random match and tweening timer
+    return self.tilesForHint, self.hintTimer
 end

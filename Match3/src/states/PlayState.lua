@@ -8,6 +8,8 @@ function PlayState:enter(params)
     self.goalScore = 2000 * self.level
     self.timeSinceLastMatch = params.timeSinceLastMatch or 0
     self.timeBonus = 0
+    self.tilesForHint = {}
+    self.hintTimer = nil
 
     -- upper left tile selected
     self.currentTile = {
@@ -27,7 +29,7 @@ function PlayState:enter(params)
             
             -- every three seconds without matches give player a hint
             if self.timeSinceLastMatch % 3 == 0 then
-                self.board:getHint()
+                self.tilesForHint, self.hintTimer = self.board:getHint()
             end
         end
     )
@@ -70,6 +72,16 @@ function PlayState:update(dt)
     if love.keyboard.wasPressed('return') or love.keyboard.wasPressed('enter') or love.mouse.wasPressed(1) then
         gSounds.select:play()
 
+        -- When a tile is selected tiles that are beeing used for hint should stop 
+        -- tweening their hint rectangle transparency
+        if self.hintTimer then
+            for _, tile in pairs(self.tilesForHint) do
+                tile.hintRectangleTransparency = 0
+            end
+
+            self.hintTimer:remove()
+        end
+
         local tileSelected = self.board.tiles[self.currentTile.row][self.currentTile.column]
         
         tileSelected.isSelected = true
@@ -88,6 +100,7 @@ function PlayState:update(dt)
                         -- if player did a match restart timer
                         self.timeSinceLastMatch = 0
 
+                        -- getting new score and time bonus
                         local newScore, newTimeBonus = self.board:resolveMatches({
                             score = self.score,
                             timeBonus = self.timeBonus
