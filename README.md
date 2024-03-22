@@ -7,6 +7,10 @@ This repository contains game implementations developed during the CS50G (Introd
 - Pong
 - Flappy Bird
 - Breakout
+- Match3
+
+## Demo
+![Demo GIF](Match3/graphics/Match3.gif)
 
 ## Prerequisites
 
