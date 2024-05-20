@@ -10,6 +10,8 @@ require 'src/StateMachine'
 require 'src/states/BaseState'
 require 'src/Tile'
 require 'src/TileMap'
+require 'src/Camera'
+require 'src/LevelMaker'
 require 'src/states/Player/PlayerIdleState'
 require 'src/states/Player/PlayerMoveState'
 require 'src/states/Player/PlayerJumpState'
@@ -21,12 +23,14 @@ gTextures = {
     ['tileTopSheet'] = love.graphics.newImage('graphics/tile_tops.png'),
     ['creaturesSheet'] = love.graphics.newImage('graphics/creatures.png'),
     ['jumpBlocksSheet'] = love.graphics.newImage('graphics/jump_blocks.png'),
-    ['tileTopSheet'] = love.graphics.newImage('graphics/tile_tops.png')
+    ['tileTopSheet'] = love.graphics.newImage('graphics/tile_tops.png'),
+    ['slimes'] = love.graphics.newImage('graphics/slimes.png')
 }
 
 gFrames = {
     ['player'] = generateQuads(gTextures['playerSheet'], PLAYER_WIDTH, PLAYER_HEIGHT),
     ['tiles'] = generateSets(gTextures['tileSheet'], 6, 10, TILE_SIZE, TILE_SIZE),
     ['jumpBlocks'] = generateSets(gTextures['jumpBlocksSheet'], 1, 5, TILE_SIZE, TILE_SIZE),
-    ['tileTops'] = generateSets(gTextures['tileTopSheet'], 6, 18, TILE_SIZE, TILE_SIZE)
+    ['tileTops'] = generateSets(gTextures['tileTopSheet'], 6, 18, TILE_SIZE, TILE_SIZE),
+    ['slimes'] = generateSets(gTextures['slimes'], 2, 3, 16, 16)
 }

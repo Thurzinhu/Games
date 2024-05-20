@@ -1,7 +1,7 @@
 PlayerJumpState = Class{__includes = BaseState}
 
 local GRAVITY = 7
-local JUMPING_SPEED = -300
+local JUMPING_SPEED = -250
 
 function PlayerJumpState:init(player)
     self.player = player
@@ -15,21 +15,23 @@ function PlayerJumpState:init(player)
 end
 
 function PlayerJumpState:update(dt)
+    self.player.x = self.player.x + self.player.dx * dt
+    self.player.y = self.player.y + self.player.dy * dt
+    self.player.dy = self.player.dy + GRAVITY
+        
     if love.keyboard.isDown('right') then
         self.player.dx = PLAYER_MOVE_SPEED
         self.player.direction = 'right'
+        self.player:resolveRightCollision()
     elseif love.keyboard.isDown('left') then
         self.player.dx = -PLAYER_MOVE_SPEED
         self.player.direction = 'left'
+        self.player:resolveLeftCollision()
     else
         self.player.dx = 0
     end
-
-    self.player.y = self.player.y + self.player.dy * dt
-    self.player.dy = self.player.dy + GRAVITY
-    self.player.x = self.player.x + self.player.dx * dt
     
-    if self.player.dy > 0 then
+    if self.player.dy >= 0 then
         self.player:changeState('fall')
     end
 end

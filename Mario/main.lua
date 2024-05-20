@@ -12,33 +12,12 @@ function love.load()
     })
 
     math.randomseed(os.time())
-    map = TileMap {
-        width = 100,
-        height = 20
-    }
-
-    tileSet = math.random(1, #gFrames['tiles'])
-    topSet = math.random(1, #gFrames['tileTops'])
-
-    for y = 1, map.height do
-        table.insert(map.tiles, {})
-        for x = 1, map.width do
-            table.insert(map.tiles[y], Tile {
-                GridX = x,
-                GridY = y,
-                width = TILE_SIZE,
-                height = TILE_SIZE,
-                id =  y < 7 and SKY or GROUND,
-                hasToping = (y == 7),
-                tileSet = tileSet,
-                topSet = topSet
-            })
-        end
-    end
+    levelMaker = LevelMaker(200, 20)
+    map = levelMaker:createMap()
 
     mario = Player {
-        x = VIRTUAL_WIDTH / 2 - PLAYER_WIDTH / 2, 
-        y = 6 * TILE_SIZE - PLAYER_HEIGHT,
+        x = 0, 
+        y = 0,
         width = PLAYER_WIDTH,
         height = PLAYER_HEIGHT,
         texture = gTextures['playerSheet'],
@@ -48,12 +27,34 @@ function love.load()
             ['idle'] = function() return PlayerIdleState(mario) end,
             ['jump'] = function() return PlayerJumpState(mario) end,
             ['fall'] = function() return PlayerFallState(mario) end
-        }
+        },
+        tileMap = map
     }
     
-    mario:changeState('idle')
-    
-    cameraScroll = 0
+    mario:changeState('fall')
+
+    camera = Camera {
+        tracked = mario,
+        map = map
+    }
+
+    -- slimeMoving = Animation {
+    --     frames = {1, 2},
+    --     interval = 0.5
+    -- }
+
+    -- slime = Entity {
+    --     x = 32, 
+    --     y = (6 * TILE_SIZE) - 16,
+    --     width = 16,
+    --     height = 16,
+    --     texture = gTextures['slimes'],
+    --     frame = gFrames['slimes'],
+    --     tileMap = map,
+    --     currentAnimation = slimeMoving
+    -- }
+    -- slime.direction = 'left'
+    -- slime.dx = PLAYER_MOVE_SPEED
 
     love.keyboard.keysPressed = {}
 end
@@ -72,13 +73,11 @@ end
 
 function love.update(dt)
     mario:update(dt)
-    mario.currentAnimation:update(dt)
+    camera:update(dt)
 
     if love.keyboard.wasPressed('escape') then
         love.event.quit()
     end
-
-    cameraScroll = mario.x - VIRTUAL_WIDTH / 2 + PLAYER_WIDTH / 2 
 
     love.keyboard.keysPressed = {}
 end
@@ -87,12 +86,7 @@ function love.draw()
     push:start()
     
     love.graphics.clear(1, 1, 1, 1)
-    
-    cameraScroll = math.max(cameraScroll, 0)
-    cameraScroll = math.min(cameraScroll, map.width * TILE_SIZE - VIRTUAL_WIDTH)
-
-    love.graphics.translate(math.floor(-cameraScroll), 0)
-
+    camera:track()
     map:render()
 
     love.graphics.draw(gTextures['jumpBlocksSheet'], gFrames['jumpBlocks'][5][6], 0, 0)

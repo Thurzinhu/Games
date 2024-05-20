@@ -12,7 +12,7 @@ function Entity:init(def)
     self.direction = 'right'
     self.currentAnimation = def.currentAnimation
     self.stateMachine = def.stateMachine
-    self.map = def.map
+    self.tileMap = def.tileMap
 end
 
 function Entity:changeState(stateName, params)
@@ -20,6 +20,7 @@ function Entity:changeState(stateName, params)
 end
 
 function Entity:update(dt)
+    self.currentAnimation:update(dt)
     self.stateMachine:update(dt)
 end
 
@@ -33,18 +34,55 @@ function Entity:render()
     )
 end
 
-function Entity:checkBottomCollision()
-    return self.y > 6 * TILE_SIZE - PLAYER_HEIGHT
+function Entity:resolveBottomCollision()
+    local bottomLeftTile = self.tileMap:coordinateToTile(self.x + 2, self.y + self.height)
+    local bottomRightTile = self.tileMap:coordinateToTile(self.x + self.width - 2, self.y + self.height)
+    local collision, shiftY = false, 0
+    local tile = (
+        bottomLeftTile:collidable() and bottomLeftTile or 
+        bottomRightTile:collidable() and bottomRightTile
+    )
+    if tile then
+        collision = true
+        self.y = (tile.gridY - 1)*tile.height - self.height
+    end
+
+    return collision
 end
 
-function Entity:checkTopCollision()
-
+function Entity:resolveTopCollision()
+    local topLeftTile = self.tileMap:coordinateToTile(self.x, self.y)
+    local topRightTile = self.tileMap:coordinateToTile(self.x + self.width, self.y)
 end
 
-function Entity:checkLeftCollision()
-
+function Entity:resolveLeftCollision()
+    local topLeftTile = self.tileMap:coordinateToTile(self.x + 1, self.y + 1)
+    local bottomLeftTile = self.tileMap:coordinateToTile(self.x + 1, self.y + self.height - 1)
+    local collision, shiftX = false, 0
+    local tile = (
+        topLeftTile:collidable() and topLeftTile or 
+        bottomLeftTile:collidable() and bottomLeftTile
+    )
+    if tile then
+        collision = true
+        self.x = (tile.gridX - 1)*tile.width + tile.width
+    end
+    
+    return collision
 end
 
-function Entity:checkRightCollision()
+function Entity:resolveRightCollision()
+    local topRightTile = self.tileMap:coordinateToTile(self.x + self.width - 1, self.y + 1)
+    local bottomRightTile = self.tileMap:coordinateToTile(self.x + self.width - 1, self.y + self.height - 1)
+    local collision, shiftX = false, 0
+    local tile = (
+        topRightTile:collidable() and topRightTile or 
+        bottomRightTile:collidable() and bottomRightTile
+    )
+    if tile then
+        collision = true
+        self.x = (tile.gridX - 1)*tile.width - self.width
+    end
 
+    return collision
 end

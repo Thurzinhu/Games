@@ -13,3 +13,7 @@ end
 function Player:render()
    Entity.render(self) 
 end
+
+function Player:checkFallOutOfMap()
+    return self.y > VIRTUAL_WIDTH
+end
