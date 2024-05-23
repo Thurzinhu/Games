@@ -10,32 +10,46 @@ end
 function LevelMaker:createMap()
     local gameObjects = {}
     local entities = {}
-    local tileMap = {}
+    local tiles = {}
     
     for y = 1, self.height do
-        table.insert(tileMap, {})
+        table.insert(tiles, {})
         for x = 1, self.width do
-            table.insert(tileMap[y], nil)
+            table.insert(tiles[y], nil)
         end
     end
 
     for x = 1, self.width do
         if self:shouldSpawnPillar() then
-            self:spawnPillar(tileMap, x)
+            self:spawnPillar(tiles, x)
         elseif self:shouldSpawnHole() then 
-            self:spawnHole(tileMap, x)
+            self:spawnHole(tiles, x)
         else 
-            self:spawFlatSurface(tileMap, x)
+            self:spawFlatSurface(tiles, x)
         end
     end
 
-    local map = TileMap {
+    local tileMap = TileMap {
         width = self.width,
         height = self.height,
-        tiles = tileMap
+        tiles = tiles
     }
 
-    return map
+    for y = 1, self.height do
+        for x = 1, self.width do
+            local curTile = tiles[y][x]
+            if curTile.hasToping and y == 7 and self:shouldSpawnEnemy() then
+                self:spawnEnemy(entities, tileMap, (x - 1)*TILE_SIZE, (y - 1)*TILE_SIZE - 16)
+            end
+        end
+    end
+    
+    level = GameLevel {
+        tileMap = tileMap,
+        entities = entities
+    }
+
+    return level
 end
 
 function LevelMaker:shouldSpawnPillar()
@@ -113,4 +127,27 @@ function LevelMaker:spawFlatSurface(tiles, col)
             topSet = self.topSet
         }
     end
+end
+
+function LevelMaker:shouldSpawnEnemy()
+    return math.random(5) == 1
+end
+
+function LevelMaker:spawnEnemy(entities, tileMap, x, y)
+    local snail = Snail {
+        x = x, 
+        y = y,
+        width = 16,
+        height = 16,
+        texture = gTextures['creaturesSheet'],
+        frame = gFrames['snails'][math.random(1, 2)],
+        tileMap = tileMap
+    }
+    snail.stateMachine = StateMachine {
+        ['move'] = function() return SnailMoveState(snail) end,
+        ['idle'] = function() return SnailIdleState(snail) end,
+        ['chase'] = function() return SnailChaseState(snail) end
+    }
+
+    table.insert(entities, snail)
 end

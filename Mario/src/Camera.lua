@@ -6,7 +6,7 @@ function Camera:init(def)
     self.dx = 0
     self.dy = 0
     self.tracked = def.tracked
-    self.map = def.map
+    self.tileMap = def.tileMap
 end
 
 function Camera:update(dt)
@@ -14,7 +14,7 @@ function Camera:update(dt)
     --self.y = self.tracked.y - VIRTUAL_HEIGHT / 2 + self.tracked.height / 2
 
     self.x = math.max(self.x, 0)
-    self.x = math.min(self.x, map.width * TILE_SIZE - VIRTUAL_WIDTH)
+    self.x = math.min(self.x, self.tileMap.width * TILE_SIZE - VIRTUAL_WIDTH)
     --self.y = math.min(self.y, 0)
 end
 

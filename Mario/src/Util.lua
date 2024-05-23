@@ -48,3 +48,12 @@ function generateSets(atlas, setsX, setsY, tileWidth, tileHeight)
 
     return sets
 end
+
+function table.slice(tbl, start, finish)
+    local sliced = {}
+    for i = start, finish do
+        table.insert(sliced, tbl[i])
+    end
+
+    return sliced
+end
