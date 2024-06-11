@@ -23,7 +23,8 @@ function PlayerJumpState:update(dt)
         collidedObject:onCollide(self.player)
     end
 
-    if self.player:resolveTopCollision() or self.player.dy >= 0 then
+    if self.player:checkTopCollision() or self.player.dy >= 0 then
+        self.player:resolveTopCollision()
         self.player.y = self.player.y + 1
         self.player:changeState('fall')
     elseif love.keyboard.isDown('right') then

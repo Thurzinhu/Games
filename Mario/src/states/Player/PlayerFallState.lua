@@ -17,9 +17,9 @@ function PlayerFallState:update(dt)
     self.player.y = self.player.y + self.player.dy * dt
     self.player.dy = self.player.dy + GRAVITY
     
-    if self.player:resolveBottomCollision() then
+    if self.player:checkBottomCollision() then
+        self.player:resolveBottomCollision()
         self.player.dy = 0
-
         if love.keyboard.isDown('right') or love.keyboard.isDown('left') then
             self.player:changeState('move')
         else

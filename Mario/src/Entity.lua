@@ -43,6 +43,24 @@ function Entity:collides(other)
     )
 end
 
+function Entity:checkBottomCollision()
+    local bottomLeftTile = self.tileMap:coordinateToTile(self.x + 3, self.y + self.height)
+    local bottomRightTile = self.tileMap:coordinateToTile(self.x + self.width - 3, self.y + self.height)
+    return (
+        bottomLeftTile and bottomLeftTile:collidable() or 
+        bottomRightTile and bottomRightTile:collidable()
+    )
+end
+
+function Entity:checkTopCollision()
+    local topLeftTile = self.tileMap:coordinateToTile(self.x + 2, self.y)
+    local topRightTile = self.tileMap:coordinateToTile(self.x + self.width - 2, self.y)
+    return (
+        topLeftTile and topLeftTile:collidable() or 
+        topRightTile and topRightTile:collidable()
+    )
+end
+
 function Entity:resolveBottomCollision()
     local bottomLeftTile = self.tileMap:coordinateToTile(self.x + 3, self.y + self.height)
     local bottomRightTile = self.tileMap:coordinateToTile(self.x + self.width - 3, self.y + self.height)
