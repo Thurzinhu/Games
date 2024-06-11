@@ -4,6 +4,8 @@ local PLAYER_MOVE_SPEED = 40
 
 function Player:init(def)
     Entity.init(self, def)
+    self.score = 0
+    self.hasKey = false
 end
 
 function Player:update(dt)
@@ -16,4 +18,13 @@ end
 
 function Player:checkFallOutOfMap()
     return self.y > VIRTUAL_WIDTH
+end
+
+function Player:checkEntityCollision()
+    for _, entity in pairs(self.level.entities) do
+        if entity:collides(self) then
+            return true
+        end
+    end
+    return false
 end

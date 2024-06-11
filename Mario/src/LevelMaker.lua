@@ -5,60 +5,62 @@ function LevelMaker:init(width, height)
     self.height = height
     self.tileSet = math.random(#gFrames['tiles']) 
     self.topSet = math.random(#gFrames['tileTops'])
+    self.gameObjects = {}
+    self.entities = {}
+    self.tiles = {}
 end
 
 function LevelMaker:createMap()
-    local gameObjects = {}
-    local entities = {}
-    local tiles = {}
-    
     for y = 1, self.height do
-        table.insert(tiles, {})
+        table.insert(self.tiles, {})
         for x = 1, self.width do
-            table.insert(tiles[y], nil)
+            table.insert(self.tiles[y], nil)
         end
     end
 
+    local platformWidth = 0
     for x = 1, self.width do
-        if self:shouldSpawnPillar() then
-            self:spawnPillar(tiles, x)
-        elseif self:shouldSpawnHole() then 
-            self:spawnHole(tiles, x)
-        else 
-            self:spawFlatSurface(tiles, x)
-        end
-    end
-
-    local tileMap = TileMap {
-        width = self.width,
-        height = self.height,
-        tiles = tiles
-    }
-
-    for y = 1, self.height do
-        for x = 1, self.width do
-            local curTile = tiles[y][x]
-            if curTile.hasToping and y == 7 and self:shouldSpawnEnemy() then
-                self:spawnEnemy(entities, tileMap, (x - 1)*TILE_SIZE, (y - 1)*TILE_SIZE - 16)
+        local spawningPlatform = (platformWidth > 0) and true or false 
+        if spawningPlatform then
+            self:spawnPlatform(x)
+            platformWidth = platformWidth - 1
+        else
+            if self:shouldSpawnPillar() then
+                self:spawnPillar(x)
+            elseif self:shouldSpawnPlatform() then
+                self:spawnPlatform(x)
+                platformWidth = math.random(1, 4) 
+            elseif x ~= 1 and x ~= self.width and self:shouldSpawnHole() then 
+                self:spawnHole(x)
+            else
+                self:spawnFlatSurface(x)
             end
         end
     end
+
+    self:spawnKey()
+
+    self.tileMap = TileMap {
+        width = self.width,
+        height = self.height,
+        tiles = self.tiles
+    }
     
-    level = GameLevel {
-        tileMap = tileMap,
-        entities = entities
+    self.level = GameLevel {
+        tileMap = self.tileMap,
+        entities = self.entities,
+        gameObjects = self.gameObjects
     }
 
-    return level
+    return self.level
 end
 
 function LevelMaker:shouldSpawnPillar()
     return math.random(5) == 1
 end
 
-function LevelMaker:spawnPillar(tiles, col)
-    local pillarHeight = math.random(5, 7)
-    
+function LevelMaker:spawnPillar(col)
+    local pillarHeight = math.random(5, 6)
     for y = 1, self.height do
         local curTile = nil
         if y < pillarHeight then
@@ -83,26 +85,74 @@ function LevelMaker:spawnPillar(tiles, col)
                 topSet = self.topSet
             }
         end
-
-        tiles[y][col] = curTile
+        self.tiles[y][col] = curTile
+    end
+    if self:shouldSpawnBush() then
+        self:spawnBush(col, pillarHeight)
     end
 end
 
 function LevelMaker:shouldSpawnPlatform()
-    return math.random(20) == 1
+    return math.random(15) == 1
 end
 
-function LevelMaker:spawnPlatform()
+function LevelMaker:spawnPlatform(col)
+    self:spawnFlatSurface(col)
+    local platformHeight = 3
+    table.insert(self.gameObjects, 
+        GameObject {
+            texture = gTextures['jumpBlocksSheet'],
+            frame = gFrames['jumpBlocks'][2][1],
+            x = (col - 1)*TILE_SIZE, 
+            y = (platformHeight - 1)*TILE_SIZE,
+            width = TILE_SIZE,
+            height = TILE_SIZE,
+            isCollidable = true,
+            isConsumable = false,
+            wasHit = false,
+            onCollide = function(obj)
+                if not obj.wasHit then
+                    obj.frame = gFrames['jumpBlocks'][2][2]
+                    obj.wasHit = true
+                    local gem = GameObject {
+                        texture = gTextures['gems'],
+                        frame = gFrames['gems'][math.random(#gFrames['gems'])][1],
+                        x = obj.x, 
+                        y = obj.y,
+                        width = TILE_SIZE,
+                        height = TILE_SIZE,
+                        isCollidable = false,
+                        isConsumable = true,
+                        onConsume = function(obj, player)
+                            obj.isInGame = false
+                            player.score = player.score + 30
+                        end
+                    }
+                    table.insert(self.gameObjects, gem)
 
+                    Timer.tween(0.1, {
+                        [gem] = {y = obj.y - 16}
+                    })
+                end
+            end
+        }
+    )
+    self.tiles[platformHeight][col] = Tile {
+        gridX = col,
+        gridY = platformHeight,
+        width = TILE_SIZE,
+        height = TILE_SIZE,
+        id = PLATFORM
+    }
 end
 
 function LevelMaker:shouldSpawnHole()
-    return math.random(5) == 1
+    return math.random(8) == 1
 end
 
-function LevelMaker:spawnHole(tiles, col)
+function LevelMaker:spawnHole(col)
     for y = 1, self.height do
-        tiles[y][col] = Tile {
+        self.tiles[y][col] = Tile {
             gridX = col,
             gridY = y,
             width = TILE_SIZE,
@@ -114,9 +164,9 @@ function LevelMaker:spawnHole(tiles, col)
     end
 end
 
-function LevelMaker:spawFlatSurface(tiles, col)
+function LevelMaker:spawnFlatSurface(col)
     for y = 1, self.height do     
-        tiles[y][col] =  Tile {
+        self.tiles[y][col] = Tile {
             gridX = col,
             gridY = y,
             width = TILE_SIZE,
@@ -127,27 +177,110 @@ function LevelMaker:spawFlatSurface(tiles, col)
             topSet = self.topSet
         }
     end
+    if self:shouldSpawnBush() then
+        self:spawnBush(col, 7)
+    end
+end
+
+
+function LevelMaker:shouldSpawnBush()
+    return math.random(5) == 1
+end
+
+function LevelMaker:spawnBush(x, y)
+    table.insert(self.gameObjects, 
+    GameObject {
+        texture = gTextures['bushes'],
+        frame = gFrames['bushes'][math.random(#gFrames['bushes'])][math.random(2) == 1 and math.random(2) or math.random(5, 7)],
+        x = (x - 1)*TILE_SIZE, 
+        y = (y - 1)*TILE_SIZE - TILE_SIZE,
+        width = TILE_SIZE,
+        height = TILE_SIZE,
+        isCollidable = false,
+        isConsumable = false
+    })
+end
+
+function LevelMaker:spawnEntities(player)
+    player = player or {x = -100}
+    for y = 1, self.height do
+        for x = 1, self.width do
+            local curTile = self.tiles[y][x]
+            if curTile.hasToping and self:shouldSpawnEnemy() then
+                self:spawnEnemy((x - 1)*TILE_SIZE, (y - 1)*TILE_SIZE - 16, player)
+            end
+        end
+    end
 end
 
 function LevelMaker:shouldSpawnEnemy()
     return math.random(5) == 1
 end
 
-function LevelMaker:spawnEnemy(entities, tileMap, x, y)
+function LevelMaker:spawnEnemy(x, y, player)
     local snail = Snail {
         x = x, 
         y = y,
         width = 16,
         height = 16,
         texture = gTextures['creaturesSheet'],
-        frame = gFrames['snails'][math.random(1, 2)],
-        tileMap = tileMap
+        frame = gFrames['snails'][math.random(2)],
+        tileMap = self.tileMap
     }
     snail.stateMachine = StateMachine {
         ['move'] = function() return SnailMoveState(snail) end,
         ['idle'] = function() return SnailIdleState(snail) end,
         ['chase'] = function() return SnailChaseState(snail) end
     }
+    snail:changeState(math.random(2) == 1 and 'idle' or 'move', {
+        player = player
+    })
+    table.insert(self.level.entities, snail)
+end
 
-    table.insert(entities, snail)
+function LevelMaker:spawnKey()
+    local jumpBlocks = {}
+    for _, obj in pairs(self.gameObjects) do
+        if obj.isCollidable then
+            table.insert(jumpBlocks, obj)
+        end
+    end
+
+    local keyJumpBlock = jumpBlocks[math.random(1, math.floor(#jumpBlocks / 2))] 
+    keyJumpBlock.onCollide = function(obj)
+        if not obj.wasHit then
+            obj.frame = gFrames['jumpBlocks'][2][2]
+            obj.wasHit = true
+            local key = GameObject {
+                texture = gTextures['keysLocks'],
+                frame = gFrames['keys'][1],
+                x = obj.x,
+                y = obj.y,
+                width = TILE_SIZE,
+                height = TILE_SIZE,
+                isCollidable = false,
+                isConsumable = true,
+                onConsume = function(obj, player)
+                    obj.isInGame = false
+                    player.hasKey = true
+                end
+            }
+            table.insert(self.gameObjects, key)
+                    
+            Timer.tween(0.1, {
+                [key] = {y = obj.y - 16}
+            })
+        end
+    end
+
+    local lockJumpBlock = jumpBlocks[math.random(math.ceil(#jumpBlocks / 2), #jumpBlocks)]
+    lockJumpBlock.texture = gTextures['keysLocks']
+    lockJumpBlock.frame = gFrames['locks'][1]
+    lockJumpBlock.onCollide = function(obj, player)
+        if player.hasKey then
+            print('opened')
+        else
+            print('no key')
+        end
+    end
 end

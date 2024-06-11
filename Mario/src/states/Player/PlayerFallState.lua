@@ -4,11 +4,12 @@ local GRAVITY = 7
 
 function PlayerFallState:init(player)
     self.player = player
-
     self.player.currentAnimation = Animation {
         frames = {3},
         interval = 1
     }
+    self.player.dy = 0
+    print('fall')
 end
 
 function PlayerFallState:update(dt)
@@ -25,7 +26,7 @@ function PlayerFallState:update(dt)
             self.player:changeState('idle')
         end
     elseif self.player:checkFallOutOfMap() then
-        love.event.quit()
+        self.player:changeState('death')
     elseif love.keyboard.isDown('right') then
         self.player.dx = PLAYER_MOVE_SPEED
         self.player.direction = 'right'
@@ -36,5 +37,14 @@ function PlayerFallState:update(dt)
         self.player:resolveLeftCollision()
     else
         self.player.dx = 0
+    end
+
+    for _, entity in pairs(self.player.level.entities) do
+        if entity:collides(self.player) then
+            self.player:changeState('jump')
+            self.player.y = self.player.y - 1
+            entity.isInGame = false
+            break
+        end
     end
 end

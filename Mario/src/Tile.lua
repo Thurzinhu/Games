@@ -16,16 +16,23 @@ function Tile:update(dt)
 end
 
 function Tile:collidable()
-    return self.id == GROUND
+    for _, id in pairs(COLLIDABLE_TILES) do
+        if id == self.id then
+            return true
+        end
+    end
+    return false
 end
 
 function Tile:render()
-    love.graphics.draw(
-        gTextures['tileSheet'], 
-        gFrames['tiles'][self.tileSet][self.id],
-        (self.gridX - 1)*self.width,
-        (self.gridY - 1)*self.height
-    )
+    if self.id ~= PLATFORM then
+        love.graphics.draw(
+            gTextures['tileSheet'], 
+            gFrames['tiles'][self.tileSet][self.id],
+            (self.gridX - 1)*self.width,
+            (self.gridY - 1)*self.height
+        )
+    end
 
     if self.hasToping then
         love.graphics.draw(

@@ -21,3 +21,7 @@ end
 function Camera:track()
     love.graphics.translate(math.floor(-self.x), math.floor(-self.y))
 end
+
+function Camera:stopTracking()
+    love.graphics.translate(self.x, self.y)
+end

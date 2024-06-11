@@ -2,16 +2,16 @@ PlayerMoveState = Class{__includes = BaseState}
 
 function PlayerMoveState:init(player)
     self.player = player
-
     self.player.currentAnimation = Animation {
         frames = {10, 11},
         interval = 0.2
     }
+    print('move')
 end
 
 function PlayerMoveState:update(dt)    
     self.player.x = self.player.x + self.player.dx * dt
-    
+
     if not self.player:resolveBottomCollision() then
         self.player:changeState('fall')
     elseif love.keyboard.wasPressed('space') then
@@ -29,4 +29,7 @@ function PlayerMoveState:update(dt)
         self.player:changeState('idle')
     end
 
+    if self.player:checkEntityCollision() then
+        self.player:changeState('death')
+    end
 end

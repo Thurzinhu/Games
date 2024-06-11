@@ -14,13 +14,31 @@ function Snail:render()
     )
 end
 
+function Snail:collides(other)
+    return not (
+        self.x + self.width - 3 < other.x or self.x + 3 > other.x + other.width or
+        self.y + self.height - 3 < other.y or self.y + 3 > other.y + other.height
+    )
+end
+
 function Snail:checkBlockAhead()
     local aheadBlock
     if self.dx > 0 then
-        aheadBlock = self.tileMap:coordinateToTile(self.x + self.width - 1, self.y + self.width)
+        aheadBlock = self.tileMap:coordinateToTile(self.x + self.width - 1, self.y + self.height)
     else 
-        aheadBlock = self.tileMap:coordinateToTile(self.x + 1, self.y + self.width)
+        aheadBlock = self.tileMap:coordinateToTile(self.x + 1, self.y + self.height)
     end
 
     return (aheadBlock) and aheadBlock:collidable() 
+end
+
+function Snail:checkBlockBehind()
+    local behindBlock
+    if self.dx > 0 then
+        behindBlock = self.tileMap:coordinateToTile(self.x - 1, self.y + self.height)
+    else 
+        behindBlock = self.tileMap:coordinateToTile(self.x + self.width + 1, self.y + self.height)
+    end
+
+    return (behindBlock) and behindBlock:collidable()
 end
