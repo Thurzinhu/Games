@@ -40,7 +40,8 @@ gTextures = {
     ['slimes'] = love.graphics.newImage('graphics/slimes.png'),
     ['gems'] = love.graphics.newImage('graphics/gems.png'),
     ['bushes'] = love.graphics.newImage('graphics/bushes_and_cacti.png'),
-    ['keysLocks'] = love.graphics.newImage('graphics/keys_and_locks.png')
+    ['keysLocks'] = love.graphics.newImage('graphics/keys_and_locks.png'),
+    ['flags'] = love.graphics.newImage('graphics/flags.png')
 }
 
 gFrames = {
@@ -54,6 +55,7 @@ gFrames = {
     ['bushes'] = generateSets(gTextures['bushes'], 1, 5, 16, 16),
     ['keys'] = table.slice(generateQuads(gTextures['keysLocks'], 16, 16), 1, 4),
     ['locks'] = table.slice(generateQuads(gTextures['keysLocks'], 16, 16), 5, 8),
+    ['poles'] = table.slice(generateQuads(gTextures['flags'], 16, 16*3), 1, 6)
 }
 
 gFonts = {

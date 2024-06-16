@@ -246,7 +246,8 @@ function LevelMaker:spawnKey()
         end
     end
 
-    local keyJumpBlock = jumpBlocks[math.random(1, math.floor(#jumpBlocks / 2))] 
+    local randomIndex = math.random(1, math.floor(#jumpBlocks / 2))
+    local keyJumpBlock = jumpBlocks[randomIndex] 
     keyJumpBlock.onCollide = function(obj)
         if not obj.wasHit then
             obj.frame = gFrames['jumpBlocks'][2][2]
@@ -273,14 +274,35 @@ function LevelMaker:spawnKey()
         end
     end
 
-    local lockJumpBlock = jumpBlocks[math.random(math.ceil(#jumpBlocks / 2), #jumpBlocks)]
+    local lockJumpBlock = jumpBlocks[math.random(randomIndex + 1, #jumpBlocks)]
     lockJumpBlock.texture = gTextures['keysLocks']
     lockJumpBlock.frame = gFrames['locks'][1]
     lockJumpBlock.onCollide = function(obj, player)
         if player.hasKey then
-            print('opened')
-        else
-            print('no key')
+            player.tileMap:coordinateToTile(obj.x, obj.y).id = SKY
+            obj.isInGame = false
+            player.hasKey = false
+            local height
+            for y = 1, self.height do
+                local curTile = self.tiles[y][self.width]
+                if curTile.hasToping then
+                    height = y 
+                    break
+                end
+            end
+            table.insert(player.level.gameObjects, GameObject {
+                texture = gTextures['flags'],
+                frame = gFrames['poles'][math.random(#gFrames['poles'])],
+                x = (self.width - 1)*TILE_SIZE,
+                y = (height - 1)*TILE_SIZE - 3*TILE_SIZE,
+                width = TILE_SIZE,
+                height = TILE_SIZE*3,
+                isCollidable = false,
+                isConsumable = true,
+                onConsume = function(obj, player)
+                    player.hasReachedGoal = true
+                end
+            })
         end
     end
 end

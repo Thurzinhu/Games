@@ -1,7 +1,6 @@
 PlayState = Class{__includes = BaseState}
 
 function PlayState:enter(params)
-    self.score = params.score
     self.levelMaker = params.levelMaker or LevelMaker(100, 20)
     self.level = params.level or self.levelMaker:createMap()
     self.player = params.player or Player {
@@ -19,7 +18,8 @@ function PlayState:enter(params)
             ['death'] = function() return PlayerDeathState(self.player) end
         },
         tileMap = self.level.tileMap,
-        level = self.level
+        level = self.level,
+        score = params.score or 0
     }
     if not params.player then
         self.player:changeState('fall')
@@ -37,19 +37,21 @@ function PlayState:update(dt)
     self.player:update(dt)
     self.camera:update(dt)
     self.level:update(dt)
-    self.score = self.player.score
 
     for _, consumable in pairs(self.player:getConsumableGameObjects()) do
        consumable:onConsume(self.player) 
     end
 
-    if love.keyboard.wasPressed('p') then
+    if self.player.hasReachedGoal then
+        gStateMachine:change('play', {
+            score = self.player.score
+        })
+    elseif love.keyboard.wasPressed('p') then
         gStateMachine:change('pause', {
             levelMaker = self.levelMaker,
             level = self.level,
             player = self.player,
-            camera = self.camera,
-            score = self.score
+            camera = self.camera
         })
     elseif not self.player.isInGame then
         gStateMachine:change('gameOver', {
@@ -66,4 +68,8 @@ function PlayState:render()
     self.camera:track()
     self.level:render()
     self.player:render()
+    self.camera:stopTracking()
+    if self.player.hasKey then
+        love.graphics.draw(gTextures['keysLocks'], gFrames['keys'][1], 2, 0)
+    end
 end

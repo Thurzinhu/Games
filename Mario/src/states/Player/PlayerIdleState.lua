@@ -6,7 +6,6 @@ function PlayerIdleState:init(player)
         frames = {1},
         interval = 1
     }
-    print('idle')
 end
 
 function PlayerIdleState:update(dt)

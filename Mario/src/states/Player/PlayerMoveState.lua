@@ -6,7 +6,6 @@ function PlayerMoveState:init(player)
         frames = {10, 11},
         interval = 0.2
     }
-    print('move')
 end
 
 function PlayerMoveState:update(dt)    

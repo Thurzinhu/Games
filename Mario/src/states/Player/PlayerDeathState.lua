@@ -7,7 +7,6 @@ function PlayerDeathState:init(player)
         interval = 1
     }
     self.player.isInGame = false
-    print('dead')
     if self.player:checkFallOutOfMap() then
         self.player.y = VIRTUAL_HEIGHT - self.player.height
     end

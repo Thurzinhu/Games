@@ -9,7 +9,6 @@ function PlayerFallState:init(player)
         interval = 1
     }
     self.player.dy = 0
-    print('fall')
 end
 
 function PlayerFallState:update(dt)

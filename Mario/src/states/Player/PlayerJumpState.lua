@@ -1,7 +1,7 @@
 PlayerJumpState = Class{__includes = BaseState}
 
 local GRAVITY = 7
-local JUMPING_SPEED = -250
+local JUMPING_SPEED = -288
 
 function PlayerJumpState:init(player)
     self.player = player
@@ -10,7 +10,6 @@ function PlayerJumpState:init(player)
         interval = 1
     }
     self.player.dy = JUMPING_SPEED
-    print('jump')
 end
 
 function PlayerJumpState:update(dt)

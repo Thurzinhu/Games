@@ -5,7 +5,6 @@ function PauseState:enter(params)
     self.level = params.level
     self.player = params.player
     self.camera = params.camera
-    self.score = params.score
 end
 
 function PauseState:update(dt)
@@ -14,8 +13,7 @@ function PauseState:update(dt)
             levelMaker = self.levelMaker,
             level = self.level,
             player = self.player,
-            camera = self.camera,
-            score = self.score
+            camera = self.camera
         })
     end
 end

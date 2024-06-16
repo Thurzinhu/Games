@@ -4,8 +4,9 @@ local PLAYER_MOVE_SPEED = 40
 
 function Player:init(def)
     Entity.init(self, def)
-    self.score = 0
+    self.score = def.score
     self.hasKey = false
+    self.hasReachedGoal = false
 end
 
 function Player:update(dt)
